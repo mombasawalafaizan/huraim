@@ -1,7 +1,10 @@
 "use server";
+import { StoredFile } from "@/types";
 import B2 from "backblaze-b2";
 
-export async function uploadImage(formData: FormData) {
+export async function uploadImage(
+  formData: FormData
+): Promise<StoredFile | null> {
   const file = formData.get("image") as File;
   try {
     // rename the file before sending if you want
@@ -27,8 +30,9 @@ export async function uploadImage(formData: FormData) {
     const bucketName = authData.allowed.bucketName;
     const parentPath = authData.downloadUrl;
     const downloadUrl = `${parentPath}/file/${bucketName}/${data.fileName}?timestamp=${data.uploadTimestamp}`;
-    return downloadUrl;
+    return { name: data.fileName, url: downloadUrl };
   } catch (err) {
     console.log("File upload error from BackBlaze B2:", err);
+    return null;
   }
 }
