@@ -1,7 +1,12 @@
 import { Document } from "mongoose";
+import { type FileWithPath } from "react-dropzone"
 
 export interface ITest extends Document {
   name: string;
+}
+
+export type FileWithPreview = FileWithPath & {
+  preview: string
 }
 
 export enum ProductCategory {
@@ -33,6 +38,7 @@ export enum ItemTexture {
 }
 
 export interface StoredFile {
+  id: string;
   name: string;
   url: string;
 }
@@ -48,6 +54,7 @@ export interface IProduct extends Document {
   fragrance?: string;
   noOfItems?: number;
   inspiredBy?: string;
+  description?: string;
   middleNotes?: string;
   sellingPrice: number;
   returnPolicy?: string;

@@ -12,8 +12,10 @@ const connectionParams = {
 
 const connect = async () => {
   try {
-    await mongoose.connect(url, connectionParams);
-    console.log("Mongo connection successful");
+    if (mongoose.connection.readyState !== 1) {
+      await mongoose.connect(url, connectionParams);
+      console.log("Mongo connection successful");
+    }
   } catch (err) {
     throw new Error("Error in connecting to MongoDB: \n" + err);
   }
