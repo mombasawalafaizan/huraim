@@ -1,12 +1,11 @@
 "use client";
-
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Image from "next/image";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/Button";
 import {
   Form,
   FormControl,
@@ -18,31 +17,33 @@ import {
 } from "@/components/ui/Form";
 import {
   Select,
-  SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectTrigger,
+  SelectGroup,
   SelectValue,
+  SelectContent,
+  SelectTrigger,
 } from "@/components/ui/Select";
+import { Zoom } from "@/components/ZoomImage";
 import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/Textarea";
+import { FileDialog } from "@/components/FileDialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
+
 import { productSchema } from "@/lib/validations/product";
+import { uploadFiles } from "@/lib/actions/upload";
+import { showErrorToast } from "@/lib/handleError";
+import { createFilePayload, isArrayOfFile } from "@/lib/utils";
+import { addProduct, checkProduct } from "@/lib/actions/product";
+
 import {
   Genders,
+  IProduct,
   ItemTexture,
   FileWithPreview,
   ProductCategory,
   MeasurementUnits,
-  IProduct,
 } from "@/types";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
-import { Textarea } from "@/components/ui/Textarea";
-import { useEffect, useState, useTransition } from "react";
-import { Zoom } from "@/components/ZoomImage";
-import { FileDialog } from "@/components/FileDialog";
-import { createFilePayload, isArrayOfFile } from "@/lib/utils";
-import { uploadFiles } from "@/lib/actions/upload";
-import { addProduct, checkProduct } from "@/lib/actions/product";
-import { showErrorToast } from "@/lib/handleError";
 
 interface ProductFormProps {
   product?: IProduct;
@@ -90,36 +91,35 @@ export function ProductForm({ product }: ProductFormProps) {
   });
 
   function onSubmit(data: Inputs) {
-    console.log("From onSubmit handler:", data);
     startTransition(async () => {
       try {
-        await checkProduct({
+        const res = await checkProduct({
           name: data.name,
         });
-
-        if (isArrayOfFile(data.images)) {
-          const payload = createFilePayload(data.images);
-          toast.promise(
-            uploadFiles(payload).then((images) => {
-              return addProduct({ ...data, images });
-            }),
-            {
-              loading: "Uploading images...",
+        if (res?.error) toast.error(res.error);
+        else {
+          if (isArrayOfFile(data.images)) {
+            const payload = createFilePayload(data.images);
+            toast.promise(
+              uploadFiles(payload).then((images) => {
+                return addProduct({ ...data, images });
+              }),
+              {
+                loading: "Uploading images...",
+                success: "Product added successfully.",
+                error: "Error uploading images!",
+              }
+            );
+          } else {
+            toast.promise(addProduct({ ...data, images: null }), {
+              loading: "Uploading product...",
               success: "Product added successfully.",
-              error: "Error uploading images!",
-            }
-          );
-        } else {
-          toast.promise(addProduct({ ...data, images: null }), {
-            loading: "Uploading product...",
-            success: "Product added successfully.",
-            error: "Error uploading product!",
-          });
+            });
+          }
         }
         form.reset();
         setFiles(null);
       } catch (err) {
-        console.error("Is this called?", err);
         showErrorToast(err);
       }
     });
@@ -223,7 +223,7 @@ export function ProductForm({ product }: ProductFormProps) {
                       min="0"
                       type="number"
                       inputMode="numeric"
-                      value={Number.isNaN(field.value) ? 0 : field.value}
+                      value={Number.isNaN(field.value) ? 0 : field.value ?? 0}
                       onChange={(e) => field.onChange(e.target.valueAsNumber)}
                       placeholder="Enter capacity"
                     />
@@ -349,7 +349,7 @@ export function ProductForm({ product }: ProductFormProps) {
                     type="number"
                     inputMode="numeric"
                     placeholder="Enter No."
-                    value={Number.isNaN(field.value) ? "" : field.value}
+                    value={Number.isNaN(field.value) ? 0 : field.value ?? 0}
                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                   />
                 </FormControl>
@@ -544,7 +544,7 @@ export function ProductForm({ product }: ProductFormProps) {
               maxSize={1024 * 1024 * 7}
               files={files}
               setFiles={setFiles}
-              // isUploading={isUploading}
+              isUploading={isPending}
               disabled={isPending}
             />
           </FormControl>

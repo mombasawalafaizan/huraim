@@ -1,6 +1,6 @@
 "use server";
-import { StoredFile } from "@/types";
 import B2 from "backblaze-b2";
+import { StoredFile } from "@/types";
 
 export async function uploadFiles(
   uploadedFiles: FormData
@@ -36,7 +36,7 @@ export async function uploadFiles(
         url: downloadUrl,
       });
     } catch (err) {
-      console.log(
+      console.error(
         `File upload error for file ${fileName} from BackBlaze B2:\n ${err}"`
       );
     }

@@ -10,7 +10,7 @@ export async function checkProduct(input: { name: string; id?: string }) {
   try {
     const existingProduct = await ProductModel.findOne({ name: input.name });
     if (existingProduct) {
-      throw new Error("Product with the same name already exists");
+      throw new Error("Product with the same name already exists!");
     }
     return {
       data: null,
@@ -24,15 +24,12 @@ export async function checkProduct(input: { name: string; id?: string }) {
   }
 }
 
-export async function addProduct(
-  input: z.infer<typeof productSchema>
-): Promise<{ data: string | null; error: string | null }> {
+export async function addProduct(input: z.infer<typeof productSchema>) {
   await connect();
   try {
     const existingProduct = await ProductModel.findOne({ name: input.name });
-    console.log("Passed from product form", input);
     if (existingProduct) {
-      throw new Error("Product with the same name already exists");
+      throw new Error("Product with the same name already exists!");
     }
     const newProduct = new ProductModel(input);
     await newProduct.save();
@@ -41,11 +38,10 @@ export async function addProduct(
       error: null,
     };
   } catch (err) {
-    let res ={
+    console.log("From addProduct: \n", err);
+    return {
       data: null,
       error: getErrorMessage(err),
     };
-    console.error("From addProduct: ", res);
-    return res;
   }
 }
